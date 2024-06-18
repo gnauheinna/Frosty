@@ -31,8 +31,8 @@ def get_sql(text):
 def load_data(table_name, lmt=100):
     try:
         # Ensure the session uses the correct database and schema
-        session.sql("USE DATABASE pet_store_db").collect()
-        session.sql("USE SCHEMA pet_store_schema").collect()
+        session.sql("USE DATABASE GSDATASET").collect()
+        session.sql("USE SCHEMA DATAS").collect()
 
         # Read in data table
         st.write(f"Here's the data from `{table_name}`:")
@@ -72,7 +72,7 @@ if "messages" not in st.session_state.keys():
     st.session_state["messages"] = [{"role": "assistant", "content": "How can I help?"}]
 
 # Sidebar for table selection
-table_names = ["customers", "pets", "favorite_icecream"]
+table_names = ["Regions", "Systems", "Revenue"]
 selected_table = st.sidebar.selectbox("Select Table", table_names)
 
 # Load and display example data from the selected table
@@ -97,8 +97,8 @@ if st.session_state.messages[-1]["role"] != "assistant":
         with st.spinner("Thinking..."):
             try:
                 # Ensure the session uses the correct database and schema
-                session.sql("USE DATABASE pet_store_db").collect()
-                session.sql("USE SCHEMA pet_store_schema").collect()
+                session.sql("USE DATABASE GSDATASET").collect()
+                session.sql("USE SCHEMA DATAS").collect()
 
                 # Include the selected table and model in the query
                 query = f"Table: {selected_table}, Query: {prompt}"
