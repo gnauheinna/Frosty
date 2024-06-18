@@ -3,18 +3,6 @@ from snowflake.snowpark import Session
 import re
 from snowflake.snowpark.exceptions import SnowparkSQLException
 
-# Here you can choose what LLM to use. Please note that they will have different cost & performance
-model = st.sidebar.selectbox('Select your model:', (
-    'mixtral-8x7b',
-    'snowflake-arctic',
-    'mistral-large',
-    'llama3-8b',
-    'llama3-70b',
-    'reka-flash',
-    'mistral-7b',
-    'llama2-70b-chat',
-    'gemma-7b'))
-
 # Establish Snowflake session
 @st.cache_resource
 def create_session():
@@ -100,17 +88,15 @@ if st.session_state.messages[-1]["role"] != "assistant":
                 session.sql("USE DATABASE pet_store_db").collect()
                 session.sql("USE SCHEMA pet_store_schema").collect()
 
-                # Include the selected table and model in the query
+                # Include the selected table in the query
                 query = f"Table: {selected_table}, Query: {prompt}"
-                st.write(f"Query sent to LLM: {query}")  # Log the query for debugging
-
-                response = session.sql(f"select snowflake.cortex.complete('{model}', $$ {query} $$)").collect()[0][0]
-                st.write(f"LLM response: {response}")  # Log the response for debugging
+                response = session.sql(f"select snowflake.cortex.complete('snowflake-arctic', '{query}')").collect()[0][0]
+                st.write(response)
 
                 # Attempt to execute the SQL if found in the response
                 sql_query = get_sql(response)
+                print("sql_query" + sql_query)
                 if sql_query:
-                    st.write(f"SQL query extracted: {sql_query}")  # Log the extracted SQL query for debugging
                     data = execute_sql(sql_query, session)
                     if data:
                         st.write(data)
