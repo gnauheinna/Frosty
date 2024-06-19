@@ -58,17 +58,35 @@ def load_data(table_name, lmt=100):
         st.error(f"An error occurred while loading the table `{table_name}`: {str(e)}")
         return None
 
+def clean_query(query):
+    # Remove any backslashes followed by an asterisk
+    query = query.replace('\\*', '*')
+    # Remove any remaining backslashes (optional, depends on the context)
+    query = query.replace('\\', '')
+    # Replace smart quotes with standard quotes
+    query = query.replace('\u2018', "'").replace('\u2019', "'").replace('\u201C', '"').replace('\u201D', '"')
+    return query.strip()  # Remove any leading/trailing whitespace
+
 def execute_sql(query, session, retries=2):
     try:
         # Ensure the session uses the correct database and schema
         session.sql("USE DATABASE GSDATASET").collect()
         session.sql("USE SCHEMA DATAS").collect()
 
+        # Clean the query string
+        query = clean_query(query)
+
+        # Ensure it's a safe query
         if re.match(r"^\s*(drop|alter|truncate|delete|insert|update)\s", query, re.I):
             st.write("Sorry, I can't execute queries that can modify the database.")
             return None
+        
+        # ascii_values = [ord(char) for char in query]
+        # st.write(f"Executing query: {ascii_values}")  # Debugging information
+        # av = [ord(char) for char in "SELECT * FROM Regions;"]
+        # st.write(f"Expected query: {av}")
+        
         result = session.sql(query).collect()
-    #    st.write(f"Executed query: {query}")  # Debugging information
         return result
     except SnowparkSQLException as e:
         st.write(f"An error occurred while executing the SQL query: {str(e)}")
@@ -139,9 +157,9 @@ def display_response(question, model, rag=0):
     response = complete(question, model, rag)
     res_text = response[0].RESPONSE
     # Attempt to execute the SQL if found in the response
-    # st.markdown("Response Text: " + res_text)
+    st.markdown(res_text)
     sql_query = get_sql(res_text)
-    # st.write("Extracted SQL Query: " + str(sql_query))
+    st.write("Extracted SQL Query: " + str(sql_query))
     if sql_query:
         # Ensure the SQL query is clean
         sql_query = sql_query.replace('\u2018', "'").replace('\u2019', "'").replace('\u201C', '"').replace('\u201D', '"')
