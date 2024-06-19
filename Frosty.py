@@ -32,7 +32,8 @@ def get_sql(text):
     sql_match = re.search(r"(SELECT .*?;|INSERT .*?;|UPDATE .*?;|DELETE .*?;|CREATE .*?;|DROP .*?;|ALTER .*?;|WITH .*?;|```sql\s+(.*?)\s+```)", text, re.DOTALL | re.IGNORECASE)
     
     if sql_match:
-        return sql_match.group(0) if sql_match.group(1) else sql_match.group(2)
+        sql_code = sql_match.group(1) or sql_match.group(2)
+        return sql_code.strip()  # Remove any leading/trailing whitespace
     return None
 
 # Load data table
@@ -66,7 +67,9 @@ def execute_sql(query, session, retries=2):
         if re.match(r"^\s*(drop|alter|truncate|delete|insert|update)\s", query, re.I):
             st.write("Sorry, I can't execute queries that can modify the database.")
             return None
-        return session.sql(query).collect()
+        result = session.sql(query).collect()
+    #    st.write(f"Executed query: {query}")  # Debugging information
+        return result
     except SnowparkSQLException as e:
         st.write(f"An error occurred while executing the SQL query: {str(e)}")
         return None
@@ -136,12 +139,15 @@ def display_response(question, model, rag=0):
     response = complete(question, model, rag)
     res_text = response[0].RESPONSE
     # Attempt to execute the SQL if found in the response
-    st.markdown("res_text" + res_text)
+    # st.markdown("Response Text: " + res_text)
     sql_query = get_sql(res_text)
-    st.write("sql_query: " + str(sql_query))
+    # st.write("Extracted SQL Query: " + str(sql_query))
     if sql_query:
+        # Ensure the SQL query is clean
+        sql_query = sql_query.replace('\u2018', "'").replace('\u2019', "'").replace('\u201C', '"').replace('\u201D', '"')
+        # st.write("Cleaned SQL Query: " + sql_query)
         data = execute_sql(sql_query, session)
-        st.write("data: " + str(data))
+        # st.write("Query Result: " + str(data))
         if data:
             st.write(data)
 
