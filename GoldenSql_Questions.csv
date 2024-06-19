@@ -1,0 +1,21 @@
+question,sql_string
+List all regions.,SELECT * FROM Regions;
+List all systems.,SELECT * FROM Systems;
+Show all revenue records.,SELECT * FROM Revenue;
+Find the total revenue for each region.,"SELECT RegionID, SUM(REVENUE) as TotalRevenue FROM Revenue GROUP BY RegionID;"
+Find the total revenue for each system.,"SELECT SystemID, SUM(REVENUE) as TotalRevenue FROM Revenue GROUP BY SystemID;"
+Find the average revenue for each region.,"SELECT RegionID, AVG(REVENUE) as AverageRevenue FROM Revenue GROUP BY RegionID;"
+Find the average revenue for each system.,"SELECT SystemID, AVG(REVENUE) as AverageRevenue FROM Revenue GROUP BY SystemID;"
+List all revenue records for the year 2024.,SELECT * FROM Revenue WHERE DATE >= '2024-01-01' AND DATE <= '2024-12-31';
+Find the total NCC_ACT for each region.,"SELECT RegionID, SUM(NCC_ACT) as TotalNCC_ACT FROM Revenue GROUP BY RegionID;"
+Find the total NCC_ACT for each system.,"SELECT SystemID, SUM(NCC_ACT) as TotalNCC_ACT FROM Revenue GROUP BY SystemID;"
+Find the average NCC_ACT for each region.,"SELECT RegionID, AVG(NCC_ACT) as AverageNCC_ACT FROM Revenue GROUP BY RegionID;"
+Find the average NCC_ACT for each system.,"SELECT SystemID, AVG(NCC_ACT) as AverageNCC_ACT FROM Revenue GROUP BY SystemID;"
+Find the revenue for each week in 2024.,"SELECT WEEK_OF_YEAR, SUM(REVENUE) as WeeklyRevenue FROM Revenue WHERE DATE >= '2024-01-01' AND DATE <= '2024-12-31' GROUP BY WEEK_OF_YEAR;"
+Find the maximum revenue for each region.,"SELECT RegionID, MAX(REVENUE) as MaxRevenue FROM Revenue GROUP BY RegionID;"
+Find the minimum revenue for each system.,"SELECT SystemID, MIN(REVENUE) as MinRevenue FROM Revenue GROUP BY SystemID;"
+Find the number of revenue records for each year.,"SELECT YEAR(DATE) as Year, COUNT(*) as RecordCount FROM Revenue GROUP BY YEAR(DATE);"
+Find the total revenue for each region and system.,"SELECT RegionID, SystemID, SUM(REVENUE) as TotalRevenue FROM Revenue GROUP BY RegionID, SystemID;"
+Find the average NCC_ACT for each region and system.,"SELECT RegionID, SystemID, AVG(NCC_ACT) as AverageNCC_ACT FROM Revenue GROUP BY RegionID, SystemID;"
+Find the total revenue for each month in 2024.,"SELECT MONTH(DATE) as Month, SUM(REVENUE) as MonthlyRevenue FROM Revenue WHERE YEAR(DATE) = 2024 GROUP BY MONTH(DATE);"
+"Find the regions with total revenue greater than 50,000.",SELECT RegionID FROM Revenue GROUP BY RegionID HAVING SUM(REVENUE) > 50000;
