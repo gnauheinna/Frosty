@@ -1,5 +1,5 @@
 import streamlit as st
-from snowflake.snowpark import Session
+from snowflake.snowpark.context import get_active_session
 import re
 from snowflake.snowpark.exceptions import SnowparkSQLException
 
@@ -17,15 +17,7 @@ model = st.sidebar.selectbox('Select your model:', (
 rag = st.sidebar.checkbox('Use RAG?')
 
 # Establish Snowflake session
-@st.cache_resource
-def create_session():
-    session = Session.builder.configs(st.secrets.snowflake).create()
-    # Ensure the session uses the correct database and schema
-    session.sql("USE DATABASE GSDATASET").collect()
-    session.sql("USE SCHEMA DATAS").collect()
-    return session
-
-session = create_session()
+session = get_active_session()
 
 def get_sql(text):
     # Regular expression to find SQL code block or inline SQL queries
@@ -37,16 +29,11 @@ def get_sql(text):
     return None
 
 # Load data table
-@st.cache_data
 def load_data(table_name, lmt=100):
     try:
-        # Ensure the session uses the correct database and schema
-        session.sql("USE DATABASE GSDATASET").collect()
-        session.sql("USE SCHEMA DATAS").collect()
-
         # Read in data table
         st.write(f"Here's the data from `{table_name}`:")
-        table = session.table(table_name)
+        table = session.table(f"GSDATASET.DATAS.{table_name}")
         
         # Do some computation on it
         table = table.limit(lmt)
@@ -69,10 +56,6 @@ def clean_query(query):
 
 def execute_sql(query, session, retries=2):
     try:
-        # Ensure the session uses the correct database and schema
-        session.sql("USE DATABASE GSDATASET").collect()
-        session.sql("USE SCHEMA DATAS").collect()
-
         # Clean the query string
         query = clean_query(query)
 
@@ -80,11 +63,6 @@ def execute_sql(query, session, retries=2):
         if re.match(r"^\s*(drop|alter|truncate|delete|insert|update)\s", query, re.I):
             st.write("Sorry, I can't execute queries that can modify the database.")
             return None
-        
-        # ascii_values = [ord(char) for char in query]
-        # st.write(f"Executing query: {ascii_values}")  # Debugging information
-        # av = [ord(char) for char in "SELECT * FROM Regions;"]
-        # st.write(f"Expected query: {av}")
         
         result = session.sql(query).collect()
         return result
@@ -97,12 +75,6 @@ num_chunks = 3
 
 def create_prompt(myquestion, rag):
     if rag == 1:
-        # # Debugging: Check current schema and tables
-        # current_schema = session.sql("SELECT CURRENT_SCHEMA()").collect()
-        # st.write(f"Current schema: {current_schema[0][0]}")
-        # available_tables = session.sql("SHOW TABLES").collect()
-        # st.write(f"Available tables: {available_tables}")
-
         # A similarity search to look for the closest Q&A pair and provide it as context in the prompt
         cmd = """
          with results as
@@ -159,7 +131,7 @@ def display_response(question, model, rag=0):
     # Attempt to execute the SQL if found in the response
     st.markdown(res_text)
     sql_query = get_sql(res_text)
-    st.write("Extracted SQL Query: " + str(sql_query))
+    # st.write("Extracted SQL Query: " + str(sql_query))
     if sql_query:
         # Ensure the SQL query is clean
         sql_query = sql_query.replace('\u2018', "'").replace('\u2019', "'").replace('\u201C', '"').replace('\u201D', '"')
