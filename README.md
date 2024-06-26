@@ -1,1 +1,1 @@
-
+conda activate snowpark
